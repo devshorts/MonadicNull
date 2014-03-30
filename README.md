@@ -26,9 +26,7 @@ Because I do.
 Wouldn't it be nicer if you could do this?
 
 ```csharp
-var chain = Option.CompileChain<User, Street>(u => u.School.District.Street);
-
-var result = chain(user);
+var result = Option.Safe(() => user.School.District.Street);
 
 if(result.HasValue()){
    // do stuff with result.Value
