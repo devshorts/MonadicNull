@@ -3,7 +3,14 @@ Devshorts.MonadicNull
 
 Free yourself from the endless chains of if statements!
 
-This is a monadic binder that leverages expression trees to let you evaluate long expression chains without fear of null references. 
+This is a monadic binder that leverages expression trees to let you evaluate long expression chains without fear of null references.  There are a lot of ways to do this, but the biggest complaint people have is not knowing *what* is null in the chain if the chain fails. 
+
+This project solves not only the long nested if statement problem (using a "monadic" null shortciruit mechanism) but also gives you metadata about the chain! Now you can know
+
+1. If there is a value
+2. If there isn't a value, what in the chain failed with a null
+
+And you will be guaranteed to get a non-null result from the chain, which is a wrapped object that gives you the target metadata you want.  
 
 Installation
 ====
@@ -24,9 +31,9 @@ public void TestWithValueTypeTargetNullField()
 {
     User user = null;
 
-    MethodValue<User> name = Option.Safe(() => user.Field.Field.Field.Field.Field);
+    MethodValue<User> field = Option.Safe(() => user.Field.Field.Field.Field.Field);
 
-    Assert.IsFalse(name.ValidChain());
+    Assert.IsFalse(field.ValidChain());
 }
 ```
 
