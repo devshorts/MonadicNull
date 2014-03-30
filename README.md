@@ -67,7 +67,7 @@ The chain only works for method invocations and property/field accessors. You ca
 Internals
 ====
 
-Internally, the lambda is decomposed and iterated over and if checks are automatically built out. For the previous failure example, the underlying lambda after transformation actually looks like this:
+Internally, the lambda is decomposed and transformed to an expressoin where the if checks are automatically built out. For the previous failure example, the underlying lambda after transformation actually looks like this:
 
 ```csharp
 .Lambda #Lambda1<System.Func`1[Devshorts.MonadicNull.MethodValue`1[System.String]]>() {
