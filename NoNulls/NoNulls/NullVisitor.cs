@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace Devshorts.MonadicNull
@@ -26,9 +27,20 @@ namespace Devshorts.MonadicNull
 
         protected override Expression VisitLambda<T>(Expression<T> node)
         {
-            var result = base.Visit(node.Body);
+            base.Visit(node.Body);
 
-            return Expression.Lambda(result);
+            if (node.Parameters.Count > 0)
+            {
+                _expressions.Push(node.Parameters.First());
+
+                BuildFinal(node);
+
+                return Expression.Lambda(_built, node.Parameters);
+            }
+            
+            BuildFinal(node);
+
+            return Expression.Lambda(_built);
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -38,16 +50,6 @@ namespace Devshorts.MonadicNull
             _expressions.Push(node);
 
             var next = Visit(node.Object);
-
-            if (IsMethod)
-            {
-                BuildFinal(node);             
-            }
-
-            if (_built != null)
-            {
-                return _built;
-            }
 
             return next;
         }
@@ -59,16 +61,6 @@ namespace Devshorts.MonadicNull
             CaptureFinal(node, false);
 
             var exp = Visit(node.Expression);
-
-            if (!IsMethod)
-            {
-                BuildFinal(exp);
-            }
-
-            if (_built != null)
-            {
-                return _built;
-            }
 
             return exp;
         }

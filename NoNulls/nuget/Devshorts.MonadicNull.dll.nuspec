@@ -2,14 +2,14 @@
 <package >
   <metadata>
     <id>Devshorts.MonadicNull</id>
-    <version>0.1.1</version>
+    <version>0.2.0</version>
     <authors>Anton Kropp</authors>
     <owners>Anton Kropp</owners>
     <licenseUrl>http://onoffswitch.net/onoff-license/</licenseUrl>
     <projectUrl>https://github.com/devshorts/MonadicNull</projectUrl>    
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A safe monadic binder that will evaluate an expression chain and return an option type with information about whether the chain succeeded or not and where it failed.</description>
-    <releaseNotes>initial release</releaseNotes>
+    <releaseNotes>Exposing precompiled expression tree</releaseNotes>
     <copyright>Copyright 2014 Anton Kropp</copyright>
     <tags>Null Monad Maybe c# csharp</tags>    
     <references>

@@ -1,7 +1,42 @@
 Devshorts.MonadicNull
 ====
 
-Free yourself from the endless chains of if statements!
+Do you hate writing this?
+
+```csharp
+if (user != null)
+{
+    if (user.School != null)
+    {
+        if (user.School.District != null)
+        {
+            if (user.School.District.Street != null)
+            {
+                return user.School.District.Street;
+            }
+        }
+    }
+}
+
+return null;
+```
+
+Because I do.  
+
+Wouldn't it be nicer if you could do this?
+
+```csharp
+var chain = Option.CompileChain<User, Street>(u => u.School.District.Street);
+
+var result = chain(user);
+
+if(result.HasValue()){
+   // do stuff with result.Value
+}
+else{
+  Log.error("Null found at {0}", result.Failure);
+}
+```
 
 This is a monadic binder that leverages expression trees to let you evaluate long expression chains without fear of null references.  There are a lot of ways to do this, but the biggest complaint people have is not knowing *what* is null in the chain if the chain fails. 
 
@@ -15,15 +50,16 @@ And you will be guaranteed to get a non-null result from the chain, which is a w
 Installation
 ====
 
-Install version 0.1.1 via [Nuget](https://www.nuget.org/packages/Devshorts.MonadicNull/0.1.1)
+Install version 0.2.0 via [Nuget](https://www.nuget.org/packages/Devshorts.MonadicNull/0.2.0)
 
 ```
 > Install-Package Devshorts.MonadicNull
 ```
 
 Usage
-===
-For example, here is a usage:
+=== 
+
+For example, here is a basic usage:
 
 ```csharp
 [TestMethod]
@@ -43,6 +79,11 @@ The `MethodValue<T>` type contains several pieces of information:
 2. What is the final result, via the `.Value` property (which throws a `NoValueException` if the chain was invalid
 3. If the chain was invalid, which part of it was invalid. This is captured leveraging expression trees and will look something like this (depending on your base objects)
 
+                      
+Precompiling for performance
+====
+                            
+If you need to run the if check a bunch of times, precompile the expression. The expression now takes an argument:
 
 ```csharp
 [TestMethod]
@@ -50,15 +91,24 @@ public void TestGet()
 {
     var user = new User();
 
-    var name = Option.Safe(() => user.GetSchool().District.Street.Name);
+    var name = Option.CompileChain(u => u.GetSchool().District.Street.Name)(user);
 
     Console.WriteLine(name.Failure); 
 }
-
 ```
+                                                                                                                  
+Since this chain failed, we can print the failure:
+
 ```
 "value(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user.GetSchool()"
 ```
+
+Performance
+====
+
+A question was raised whether this is slower than regular null checks. The answer is not really. Because the expression is precompiled (you can re-use it) many times over, so you only pay an expression tree compilation cost once.  If you are going to check on things in a loop, precompile it and run it. If you are only going to run the check once, feel free to use the basic `Safe` method.
+
+In initial benchmarks precompiled expression monadic null took the same amount of time as regular if checks.
 
 Caveats
 ====
@@ -67,45 +117,34 @@ The chain only works for method invocations and property/field accessors. You ca
 Internals
 ====
 
-Internally, the lambda is decomposed and transformed to an expressoin where the if checks are automatically built out. For the previous failure example, the underlying lambda after transformation actually looks like this:
+Internally, the lambda is decomposed and transformed to an expression where the if checks are automatically built out. For the previous failure example, the underlying lambda after transformation actually looks like this:
 
 ```csharp
-.Lambda #Lambda1<System.Func`1[Devshorts.MonadicNull.MethodValue`1[System.String]]>() {
+.Lambda #Lambda1<System.Func`2[NoNulls.Tests.SampleData.User,Devshorts.MonadicNull.MethodValue`1[NoNulls.Tests.SampleData.Street]]>(NoNulls.Tests.SampleData.User $u)
+{
     .Block() {
-        .If (.Constant<NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa>(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user ==
-        null) {
-            .New Devshorts.MonadicNull.MethodValue`1[System.String](
+        .If ($u == null) {
+            .New Devshorts.MonadicNull.MethodValue`1[NoNulls.Tests.SampleData.Street](
                 null,
-                "value(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user",
+                "u",
                 False)
         } .Else {
-            .If (.Call (.Constant<NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa>(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user).GetSchool()
-            == null) {
-                .New Devshorts.MonadicNull.MethodValue`1[System.String](
+            .If ($u.School == null) {
+                .New Devshorts.MonadicNull.MethodValue`1[NoNulls.Tests.SampleData.Street](
                     null,
-                    "value(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user.GetSchool()",
+                    "u.School",
                     False)
             } .Else {
-                .If ((.Call (.Constant<NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa>(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user).GetSchool()
-                ).District == null) {
-                    .New Devshorts.MonadicNull.MethodValue`1[System.String](
+                .If (($u.School).District == null) {
+                    .New Devshorts.MonadicNull.MethodValue`1[NoNulls.Tests.SampleData.Street](
                         null,
-                        "value(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user.GetSchool().District",
+                        "u.School.District",
                         False)
                 } .Else {
-                    .If (((.Call (.Constant<NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa>(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user).GetSchool()
-                    ).District).Street == null) {
-                        .New Devshorts.MonadicNull.MethodValue`1[System.String](
-                            null,
-                            "value(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user.GetSchool().District.Street",
-                            False)
-                    } .Else {
-                        .New Devshorts.MonadicNull.MethodValue`1[System.String](
-                            (((.Call (.Constant<NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa>(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user).GetSchool()
-                            ).District).Street).Name,
-                            "value(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user.GetSchool().District.Street",
-                            True)
-                    }
+                    .New Devshorts.MonadicNull.MethodValue`1[NoNulls.Tests.SampleData.Street](
+                        (($u.School).District).Street,
+                        "u.School.District",
+                        True)
                 }
             }
         }

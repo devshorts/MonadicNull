@@ -13,11 +13,25 @@ namespace Devshorts.MonadicNull
         /// <typeparam name="T"></typeparam>
         /// <param name="input"></param>
         /// <returns></returns>
+        public static Func<Y, MethodValue<T>> CompileChain<Y, T>(Expression<Func<Y, T>> input)
+        {
+            var transform = (Expression<Func<Y, MethodValue<T>>>)new NullVisitor<T>().Visit(input);
+
+            return transform.Compile();
+        }
+
         public static MethodValue<T> Safe<T>(Expression<Func<T>> input)
         {
             var transform = (Expression<Func<MethodValue<T>>>)new NullVisitor<T>().Visit(input);
 
             return transform.Compile()();
         }
+//
+//        public static Func<T, MethodValue<T>> SafeCompile<T>(Expression<Func<T>> input)
+//        {
+//            var transform = (Expression<Func<MethodValue<T>>>)new NullVisitor<T>().Visit(input);
+//
+//            return transform.Compile();
+//        }
     }
 }
