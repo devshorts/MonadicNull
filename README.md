@@ -5,6 +5,15 @@ Free yourself from the endless chains of if statements!
 
 This is a monadic binder that leverages expression trees to let you evaluate long expression chains without fear of null references. 
 
+Installation
+====
+
+Install version 0.1.1 via [Nuget](https://www.nuget.org/packages/Devshorts.MonadicNull/0.1.1)
+
+```
+> Install-Package Devshorts.MonadicNull
+```
+
 Usage
 ===
 For example, here is a usage:
