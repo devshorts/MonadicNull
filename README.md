@@ -113,4 +113,3 @@ Internally, the lambda is decomposed and transformed to an expressoin where the 
 }
 ```
 
-s
