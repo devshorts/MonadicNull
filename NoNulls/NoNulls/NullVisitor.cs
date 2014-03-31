@@ -38,9 +38,7 @@ namespace Devshorts.MonadicNull
         {            
             _expressions.Push(node);
 
-            var next = Visit(node.Object);
-
-            return next;
+            return Visit(node.Object);
         }
 
         protected override Expression VisitMember(MemberExpression node)
