@@ -119,6 +119,98 @@ Since this chain failed, we can print the failure:
 "value(NoNulls.Tests.Tests.ExpressionTests+<>c__DisplayClassa).user.GetSchool()"
 ```
 
+A fun example
+===
+
+Let's say there is an IEnumerable extension method that collects failed items into a list, and successful items into a list
+
+```csharp
+public class Split<T>
+{
+    public IList<T> Success { get; private set; }
+    public IList<T> Failure { get; private set; }
+
+    public Split(IList<T> success, IList<T> failure)
+    {
+        Success = success;
+        Failure = failure;
+    }
+}
+
+public static class Extensions
+{
+    public static Split<T> Protect<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+    {
+        var split = new Split<T>(new List<T>(), new List<T>());
+
+        foreach (var item in source)
+        {
+            if (predicate(item))
+            {
+                split.Success.Add(item);
+            }
+            else
+            {
+                split.Failure.Add(item);
+            }
+        }
+
+        return split;
+    } 
+}
+```
+
+And a random user object generator
+
+```csharp
+private static Random _random = new Random((int) DateTime.Now.Ticks);
+
+private static T Next<T>() where T: class, new()
+{
+    return _random.Next(0, 2) == 0 ? null : (T)Activator.CreateInstance(typeof (T));
+}
+
+public static User GetUser()
+{
+    var u = Next<User>();
+
+    if (u != null)
+    {
+        u.School = Next<School>();
+
+        if (u.School != null)
+        {
+            u.School.District = Next<District>();
+
+            if (u.School.District != null)
+            {
+                u.School.District.Street = Next<Street>();
+            }
+        }
+    }
+
+    return u;
+}
+```
+
+Let's safely collect all failures and all successes
+
+```csharp
+[TestMethod]
+public void Split()
+{
+    var chain = Option.CompileChain<User, Street>(u => u.School.District.Street);
+
+    var split = Enumerable.Repeat(0, 1000)
+                               .Select(i => GetUser())
+                               .Select(chain)
+                               .Protect(item => item.ValidChain());
+
+    Console.WriteLine("Successful {0}", split.Success.Count);
+
+    Console.WriteLine("Failure {0}", split.Failure.Count);
+}
+```
 Performance
 ====
 

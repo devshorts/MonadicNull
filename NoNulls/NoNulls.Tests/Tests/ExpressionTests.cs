@@ -4,10 +4,29 @@ using System.Diagnostics;
 using System.Linq;
 using Devshorts.MonadicNull;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NoNulls.Tests.Extensions;
 using NoNulls.Tests.SampleData;
 
 namespace NoNulls.Tests.Tests
 {
+    [TestClass]
+    public class TestSplits
+    {
+        [TestMethod]
+        public void Split()
+        {
+            var chain = Option.CompileChain<User, Street>(u => u.School.District.Street);
+
+            var split = Enumerable.Repeat(0, 1000)
+                                       .Select(i => ExpressionTests.Getuser())
+                                       .Select(chain)
+                                       .Protect(item => item.ValidChain());
+
+            Console.WriteLine("Successful {0}", split.Success.Count);
+
+            Console.WriteLine("Failure {0}", split.Failure.Count);
+        }
+    }
     [TestClass]
     public class Test
     {
@@ -281,11 +300,33 @@ namespace NoNulls.Tests.Tests
             Assert.AreEqual(name.Value, "foo1");
         }
 
-        public User Getuser()
-        {
-            var r = new Random((int) DateTime.Now.Ticks);
+        private static Random _random = new Random((int) DateTime.Now.Ticks);
 
-            return r.Next(0, 1) == 0 ? null : new User();
+        private static T Next<T>() where T: class, new()
+        {
+            return _random.Next(0, 2) == 0 ? null : (T)Activator.CreateInstance(typeof (T));
+        }
+
+        public static User Getuser()
+        {
+            var u = Next<User>();
+
+            if (u != null)
+            {
+                u.School = Next<School>();
+
+                if (u.School != null)
+                {
+                    u.School.District = Next<District>();
+
+                    if (u.School.District != null)
+                    {
+                        u.School.District.Street = Next<Street>();
+                    }
+                }
+            }
+
+            return u;
         }
 
         [TestMethod]
