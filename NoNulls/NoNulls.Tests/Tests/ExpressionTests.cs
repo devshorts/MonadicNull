@@ -99,7 +99,7 @@ namespace NoNulls.Tests.Tests
                            School = new School()
                        };
 
-            var name = Option.Safe(() => user.GetSchool().ClassMatesList[0].School.District);
+            var name = Option.Safe(() => user.GetSchool().ClassMatesList[0].School.District.Street.Name);
 
             Assert.IsFalse(name.ValidChain());
         }

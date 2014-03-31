@@ -79,6 +79,22 @@ The `MethodValue<T>` type contains several pieces of information:
 2. What is the final result, via the `.Value` property (which throws a `NoValueException` if the chain was invalid
 3. If the chain was invalid, which part of it was invalid. This is captured leveraging expression trees and will look something like this (depending on your base objects)
 
+Lets look at a more complicated example:
+
+```csharp
+[TestMethod]
+public void TestGetSafeWithList()
+{
+    var user = new User
+               {
+                   School = new School()
+               };
+
+    var name = Option.Safe(() => user.GetSchool().ClassMatesList[0].School.District.Street.Name);
+
+    Assert.IsFalse(name.ValidChain());
+}
+```
                       
 Precompiling for performance
 ====
