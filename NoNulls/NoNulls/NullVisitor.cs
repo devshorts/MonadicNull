@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,42 +10,32 @@ namespace Devshorts.MonadicNull
 
         private Expression _finalExpression;
 
-        private Expression _built;
-
-        private Boolean IsMethod { get; set; }
-        
-        private void CaptureFinal(Expression node, bool isMethod)
+        private void CaptureFinalExpression(Expression node)
         {
             if (_finalExpression == null)
             {
                 _finalExpression = node;
-
-                IsMethod = isMethod;
             }
         }
 
-        protected override Expression VisitLambda<T>(Expression<T> node)
+        protected override Expression VisitLambda<Y>(Expression<Y> node)
         {
             base.Visit(node.Body);
+
+            CaptureFinalExpression(node.Body);
 
             if (node.Parameters.Count > 0)
             {
                 _expressions.Push(node.Parameters.First());
 
-                BuildFinal(node);
-
-                return Expression.Lambda(_built, node.Parameters);
+                return Expression.Lambda(BuildFinalStatement(), node.Parameters);
             }
             
-            BuildFinal(node);
-
-            return Expression.Lambda(_built);
+            return Expression.Lambda(BuildFinalStatement());
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
-        {
-            CaptureFinal(node, true);
-
+        {            
             _expressions.Push(node);
 
             var next = Visit(node.Object);
@@ -58,23 +47,12 @@ namespace Devshorts.MonadicNull
         {            
             _expressions.Push(node);
 
-            CaptureFinal(node, false);
-
-            var exp = Visit(node.Expression);
-
-            return exp;
+            return Visit(node.Expression);
         }
 
-        private void BuildFinal(Expression exp)
+        private Expression BuildFinalStatement()
         {
-            if (_expressions.Count == 0)
-            {
-                return;
-            }
-
-            var condition = BuildIfs(_expressions.Pop());
-
-            _built = Expression.Block(new[] { condition });
+            return Expression.Block(new[] { BuildIfs(_expressions.Pop()) });
         }
 
         private Expression BuildIfs(Expression top)
@@ -87,23 +65,21 @@ namespace Devshorts.MonadicNull
 
             var nullValue = Expression.Constant(default(T), _finalExpression.Type);
 
-            var constructorInfo = typeof(MethodValue<T>).GetConstructor(new[] { typeof(T), typeof(string), typeof(bool) });
+            var methodValueConstructor = typeof(MethodValue<T>).GetConstructor(new[] { typeof(T), typeof(string), typeof(bool) });
 
-            var returnNull = Expression.New(constructorInfo, new [] { nullValue, stringRepresentation, falseVal });
+            var returnNull = Expression.New(methodValueConstructor, new [] { nullValue, stringRepresentation, falseVal });
 
             var ifNull = Expression.ReferenceEqual(top, Expression.Constant(null));
             
-            var finalReturn = Expression.New(constructorInfo, new []{ _finalExpression, stringRepresentation, trueVal });
-           
-            if (_expressions.Count == 1)
-            {
-                _expressions.Clear();
-            }
+            var finalReturn = Expression.New(methodValueConstructor, new []{ _finalExpression, stringRepresentation, trueVal });
             
-            var condition = Expression.Condition(ifNull, returnNull, 
-                    _expressions.Count == 0 ? 
-                        finalReturn 
-                        : BuildIfs(_expressions.Pop()));
+            // ignore the last element since we only care about the path to get to it, not the actual element
+            var nextExpression =
+                _expressions.Count <= 1
+                    ? finalReturn
+                    : BuildIfs(_expressions.Pop());
+
+            var condition = Expression.Condition(ifNull, returnNull, nextExpression);
 
             
             return condition;            
