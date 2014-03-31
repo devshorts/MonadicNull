@@ -12,14 +12,14 @@ namespace NoNulls.Tests.Tests
     public class Test
     {
         [TestMethod]
-        public void Foo()
+        public void NestedChecksOnThisObject()
         {
-            var x = Option.CompileChain<Test, Test>(item => item.Get().Get())(this);
+            var x = Option.CompileChain<Test, Test>(item => item.Get().Get().Get().Get().Get())(this);
 
             Assert.IsFalse(x.ValidChain());
         }
 
-        public Test Get()
+        private Test Get()
         {
             return null;
         }

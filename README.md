@@ -110,7 +110,9 @@ In initial benchmarks precompiled expression monadic null took the same amount o
 
 Caveats
 ====
-The chain only works for method invocations and property/field accessors. You cannot do anything other than that or the expression tree parsing will fail.
+The chain only works for method invocations, property/field accessors, or list indexing.
+
+You cannot do anything other than that or the expression tree parsing will fail.
 
 Internals
 ====
