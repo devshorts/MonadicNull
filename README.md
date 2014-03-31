@@ -23,7 +23,9 @@ return null;
 
 Because I do.  
 
-Wouldn't it be nicer if you could do this?
+Can't wait till C# 6 for the `?.` operator? Me neither.  
+
+Until then, wouldn't it be nice if you could do this?
 
 ```csharp
 var result = Option.Safe(() => user.School.District.Street);
