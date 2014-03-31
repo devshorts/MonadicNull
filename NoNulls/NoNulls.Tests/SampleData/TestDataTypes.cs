@@ -29,6 +29,14 @@ namespace NoNulls.Tests.SampleData
     {
         public District District { get; set; }
 
+        public IEnumerable<User> ClassMatesEnumerable { get; set; }
+
+        public List<User> ClassMatesList { get; set; }
+
+        public Dictionary<User, User> ClassMatesDict { get; set; }
+
+        public HashSet<User> ClassMatesHash { get; set; }
+
         public District GetDistrict()
         {
             return District;

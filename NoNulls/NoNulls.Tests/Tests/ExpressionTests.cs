@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Devshorts.MonadicNull;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NoNulls.Tests.SampleData;
@@ -87,6 +89,83 @@ namespace NoNulls.Tests.Tests
             var name = Option.CompileChain<User, string>(u => u.GetSchool().District.Street.Name)(user);
 
             Assert.IsFalse(name.ValidChain()); 
+        }
+
+        [TestMethod]
+        public void TestGetSafeWithList()
+        {
+            var user = new User
+                       {
+                           School = new School()
+                       };
+
+            var name = Option.Safe(() => user.GetSchool().ClassMatesList[0].School.District);
+
+            Assert.IsFalse(name.ValidChain());
+        }
+
+        [TestMethod]
+        public void TestGetSafeWithListNonNullExtensions()
+        {
+            var user = new User
+            {
+                School = new School
+                {
+                    ClassMatesList = new List<User>
+                                              {
+                                                  new User
+                                                  {
+                                                      School = new School
+                                                               {
+                                                                    District   = new District
+                                                                                 {
+                                                                                     Street = new Street
+                                                                                              {
+                                                                                                  Name = "test"
+                                                                                              }
+                                                                                 }
+                                                               }
+                                                  }
+                                              }
+                }
+            };
+
+            var name = Option.Safe(() => user.GetSchool().ClassMatesList.First().School.District.Street.Name);
+
+            Assert.IsTrue(name.ValidChain());
+            Assert.AreEqual(name.Value, "test");
+        }
+
+        [TestMethod]
+        public void TestGetSafeWithListNonNull()
+        {
+            var user = new User
+            {
+                School = new School
+                         {
+                             ClassMatesList = new List<User>
+                                              {
+                                                  new User
+                                                  {
+                                                      School = new School
+                                                               {
+                                                                    District   = new District
+                                                                                 {
+                                                                                     Street = new Street
+                                                                                              {
+                                                                                                  Name = "test"
+                                                                                              }
+                                                                                 }
+                                                               }
+                                                  }
+                                              }
+                         }
+            };
+
+            var name = Option.Safe(() => user.GetSchool().ClassMatesList[0].School.District.Street.Name);
+
+            Assert.IsTrue(name.ValidChain());
+            Assert.AreEqual(name.Value, "test");
         }
 
         [TestMethod]
@@ -246,6 +325,8 @@ namespace NoNulls.Tests.Tests
             });
 
             Console.WriteLine("chained: {0}", chainedNull);
+
+            Assert.IsTrue(true);
         }
 
         private double Time<T>(Func<T> action)
