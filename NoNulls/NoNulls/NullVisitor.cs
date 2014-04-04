@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -7,7 +8,7 @@ namespace Devshorts.MonadicNull
     internal class NullVisitor<T> : ExpressionVisitor
     {
         private readonly Stack<Expression> _expressions = new Stack<Expression>();
-
+            
         private Expression _finalExpression;
 
         private void CaptureFinalExpression(Expression node)
@@ -28,7 +29,9 @@ namespace Devshorts.MonadicNull
             {
                 _expressions.Push(node.Parameters.First());
 
-                return Expression.Lambda(BuildFinalStatement(), node.Parameters);
+                var final = BuildFinalStatement();
+
+                return Expression.Lambda(final, node.Parameters);
             }
             
             return Expression.Lambda(BuildFinalStatement());
@@ -53,9 +56,26 @@ namespace Devshorts.MonadicNull
             return Expression.Block(new[] { BuildIfs(_expressions.Pop()) });
         }
 
-        private Expression BuildIfs(Expression top)
+        private int count = 0;
+
+        private string NextVarName
+        {
+            get
+            {
+                count++;
+                return "var" + count;
+            }
+        }
+
+        private Expression BuildIfs(Expression top, Expression next = null)
         {
             var stringRepresentation = Expression.Constant(top.ToString(), typeof(string));
+
+            var variable = Expression.Parameter(top.Type, NextVarName);
+
+            Expression evaluatedExpression = EvaluateExpression(top, next);
+
+            var assignment = Expression.Assign(variable, evaluatedExpression);
 
             var trueVal = Expression.Constant(true);
 
@@ -67,7 +87,7 @@ namespace Devshorts.MonadicNull
 
             var returnNull = Expression.New(methodValueConstructor, new [] { nullValue, stringRepresentation, falseVal });
 
-            var ifNull = Expression.ReferenceEqual(top, Expression.Constant(null));
+            var ifNull = Expression.ReferenceEqual(variable, Expression.Constant(null));
             
             var finalReturn = Expression.New(methodValueConstructor, new []{ _finalExpression, stringRepresentation, trueVal });
             
@@ -75,12 +95,36 @@ namespace Devshorts.MonadicNull
             var nextExpression =
                 _expressions.Count <= 1
                     ? finalReturn
-                    : BuildIfs(_expressions.Pop());
+                    : BuildIfs(_expressions.Pop(), variable);
 
             var condition = Expression.Condition(ifNull, returnNull, nextExpression);
-
             
-            return condition;            
+            return Expression.Block(new [] { variable }, new Expression [] { assignment, condition });           
+        }
+
+        private Expression EvaluateExpression(Expression top, Expression next)
+        {
+            Expression evaluatedExpression = top;
+
+            if (next == null)
+            {
+                return top;
+            }
+
+            if (top is MethodCallExpression)
+            {
+                var method = top as MethodCallExpression;
+
+                evaluatedExpression = Expression.Call(next, method.Method, method.Arguments);
+            }
+            else if (top is MemberExpression)
+            {
+                var member = top as MemberExpression;
+
+                evaluatedExpression = Expression.MakeMemberAccess(next, member.Member);
+            }
+
+            return evaluatedExpression;
         }
     }
 }

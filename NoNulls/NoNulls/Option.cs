@@ -21,6 +21,13 @@ namespace Devshorts.MonadicNull
             return transform.Compile();
         }
 
+        public static Func<T, T> CompileChain<T>(Expression<Func<T, T>> input)
+        {
+            var transform = (Expression<Func<T, T>>)new NullVisitor<T>().Visit(input);
+
+            return transform.Compile();
+        }
+
         /// <summary>
         /// Transforms the input expression and builds if not null checks for each property
         /// and returns a MethodValue object that lets you know whether the item has a result,
