@@ -64,6 +64,13 @@ namespace NoNulls.Tests.SampleData
             return Name + i;
         }
 
+        public String GetNameSideEffect(int i)
+        {
+            Name += i;
+
+            return Name;
+        }
+
         public String GetName(Func<int> action)
         {
             return GetName(action());

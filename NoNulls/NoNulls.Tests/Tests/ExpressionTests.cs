@@ -232,8 +232,9 @@ namespace NoNulls.Tests.Tests
             Assert.AreEqual(name.Value, "foo");
         }
 
+
         [TestMethod]
-        public void TestNonNullsWithMethodCalls()
+        public void TestNonNullsWithMethodCallsAndArgs()
         {
             var user = new User
             {
@@ -253,6 +254,29 @@ namespace NoNulls.Tests.Tests
 
             Assert.AreEqual(name.Value, "foo1");
         }
+
+        [TestMethod]
+        public void TestNonNullsWithMethodCallsWithSideEffects()
+        {
+            var user = new User
+            {
+                School = new School
+                {
+                    District = new District
+                    {
+                        Street = new Street
+                        {
+                            Name = "foo"
+                        }
+                    }
+                }
+            };
+
+            var name = Option.CompileChain<User, string>(u => u.GetSchool().GetDistrict().GetStreet().GetNameSideEffect(1))(user);
+
+            Assert.AreEqual(name.Value, "foo1");
+        }
+
 
         [TestMethod]
         public void TestNonNullsWithMethodCalls2()

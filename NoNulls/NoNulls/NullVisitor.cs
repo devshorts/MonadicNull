@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Devshorts.MonadicNull
 {
@@ -56,72 +57,106 @@ namespace Devshorts.MonadicNull
             return Expression.Block(new[] { BuildIfs(_expressions.Pop()) });
         }
 
-        private int count = 0;
-
+        private int _count;
         private string NextVarName
         {
             get
             {
-                count++;
-                return "var" + count;
+                _count++;
+                return "var" + _count;
             }
         }
 
-        private Expression BuildIfs(Expression top, Expression next = null)
+        private ConstructorInfo _constructor;
+        private ConstructorInfo MethodValueConstructor
         {
-            var stringRepresentation = Expression.Constant(top.ToString(), typeof(string));
+            get
+            {
+                if (_constructor == null)
+                {
+                    _constructor = typeof(MethodValue<T>).GetConstructor(new[] { typeof(T), typeof(string), typeof(bool) });
+                }
 
-            var variable = Expression.Parameter(top.Type, NextVarName);
+                return _constructor;
+            }
+        }
 
-            Expression evaluatedExpression = EvaluateExpression(top, next);
+        private Expression BuildIfs(Expression current, Expression prev = null)
+        {
+            var stringRepresentation = Expression.Constant(current.ToString(), typeof(string));
+
+            var variable = Expression.Parameter(current.Type, NextVarName);
+
+            Expression evaluatedExpression = EvaluateExpression(current, prev);
 
             var assignment = Expression.Assign(variable, evaluatedExpression);
 
-            var trueVal = Expression.Constant(true);
+            var end = _expressions.Count == 0;
 
+            var nextExpression =
+                 !end
+                    ? BuildIfs(_expressions.Pop(), variable)
+                    : LastExpression(variable, stringRepresentation);
+
+            Expression blockBody;
+
+            if (!end)
+            {
+                var whenNull = OnNull(stringRepresentation);
+
+                blockBody = CheckForNull(variable, whenNull, nextExpression);
+            }
+            else
+            {
+                blockBody = nextExpression;
+            }
+
+            return Expression.Block(new [] { variable }, new[] { assignment, blockBody });           
+        }
+
+        private Expression OnNull(ConstantExpression stringRepresentation)
+        {
             var falseVal = Expression.Constant(false);
 
             var nullValue = Expression.Constant(default(T), _finalExpression.Type);
 
-            var methodValueConstructor = typeof(MethodValue<T>).GetConstructor(new[] { typeof(T), typeof(string), typeof(bool) });
-
-            var returnNull = Expression.New(methodValueConstructor, new [] { nullValue, stringRepresentation, falseVal });
-
-            var ifNull = Expression.ReferenceEqual(variable, Expression.Constant(null));
-            
-            var finalReturn = Expression.New(methodValueConstructor, new []{ _finalExpression, stringRepresentation, trueVal });
-            
-            // ignore the last element since we only care about the path to get to it, not the actual element
-            var nextExpression =
-                _expressions.Count <= 1
-                    ? finalReturn
-                    : BuildIfs(_expressions.Pop(), variable);
-
-            var condition = Expression.Condition(ifNull, returnNull, nextExpression);
-            
-            return Expression.Block(new [] { variable }, new Expression [] { assignment, condition });           
+            return Expression.New(MethodValueConstructor, new Expression[] { nullValue, stringRepresentation, falseVal });
         }
 
-        private Expression EvaluateExpression(Expression top, Expression next)
+        private Expression CheckForNull(ParameterExpression variable, Expression whenNull, Expression nextExpression)
         {
-            Expression evaluatedExpression = top;
+            var ifNull = Expression.ReferenceEqual(variable, Expression.Constant(null));
 
-            if (next == null)
+            return Expression.Condition(ifNull, whenNull, nextExpression);
+        }
+
+        private Expression LastExpression(ParameterExpression variable, ConstantExpression stringRepresentation)
+        {
+            var trueVal = Expression.Constant(true);
+         
+            return Expression.New(MethodValueConstructor, new Expression[] { variable, stringRepresentation, trueVal });
+        }
+
+        private Expression EvaluateExpression(Expression current, Expression prev)
+        {
+            Expression evaluatedExpression = current;
+
+            if (prev == null)
             {
-                return top;
+                return current;
             }
 
-            if (top is MethodCallExpression)
+            if (current is MethodCallExpression)
             {
-                var method = top as MethodCallExpression;
+                var method = current as MethodCallExpression;
 
-                evaluatedExpression = Expression.Call(next, method.Method, method.Arguments);
+                evaluatedExpression = Expression.Call(prev, method.Method, method.Arguments);
             }
-            else if (top is MemberExpression)
+            else if (current is MemberExpression)
             {
-                var member = top as MemberExpression;
+                var member = current as MemberExpression;
 
-                evaluatedExpression = Expression.MakeMemberAccess(next, member.Member);
+                evaluatedExpression = Expression.MakeMemberAccess(prev, member.Member);
             }
 
             return evaluatedExpression;
