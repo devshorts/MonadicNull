@@ -90,14 +90,22 @@ namespace NoNulls.Tests.Tests
         }
 
         [TestMethod]
+        public void TestValueTypeInChain()
+        {
+            User user = null;
+
+            var name = Option.Safe(() => user.Number.GetHashCode());
+
+            Assert.IsFalse(name.ValidChain());
+
+            Assert.AreEqual(name.GetValueOrDefault(), 0);
+        }
+
+        [TestMethod]
         public void TestWithDateTimeValueTypeTargetAndToString()
         {
-            var user = new User();
+            var user = new User { Number = 0 };
 
-            user.Number = 0;
-
-            // This is currently throwing exception - "Reference equality is not defined for the types 'System.DateTime' and 'System.Object'" 
-            // in line 128 of NullVisitor.cs class.
             var name = Option.CompileChain<User, string>(u => u.DateOfBirth.ToShortDateString())(user);
 
             Assert.IsTrue(name.ValidChain());

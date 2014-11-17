@@ -125,6 +125,11 @@ namespace Devshorts.MonadicNull
 
         private Expression CheckForNull(ParameterExpression variable, Expression whenNull, Expression nextExpression)
         {
+            if (variable.Type.IsValueType)
+            {
+                return nextExpression;
+            }
+
             var ifNull = Expression.ReferenceEqual(variable, Expression.Constant(null));
 
             return Expression.Condition(ifNull, whenNull, nextExpression);
