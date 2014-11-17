@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 
 namespace NoNulls.Tests.SampleData
-{    
-    internal sealed class User
+{
+    public sealed class User
     {
         public School School { get; set; }
 
@@ -25,7 +25,7 @@ namespace NoNulls.Tests.SampleData
         public HashSet<User> ClassMatesHash { get; set; }
     }
 
-    internal sealed class School
+    public sealed class School
     {
         public District District { get; set; }
 
@@ -43,7 +43,7 @@ namespace NoNulls.Tests.SampleData
         }
     }
 
-    internal sealed class District
+    public sealed class District
     {
         public Street Street { get; set; }
 
@@ -53,7 +53,7 @@ namespace NoNulls.Tests.SampleData
         }
     }
 
-    internal class Street
+    public class Street
     {
         public String Name { get; set; }
 
