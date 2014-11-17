@@ -45,7 +45,7 @@ namespace NoNulls.Tests.Tests
     }
 
     [TestClass]
-    internal  class ExpressionTests
+    public class ExpressionTests
     {
         
         [TestMethod]
