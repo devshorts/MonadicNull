@@ -45,7 +45,7 @@ namespace NoNulls.Tests.Tests
     }
 
     [TestClass]
-    internal  class ExpressionTests
+    public  class ExpressionTests
     {
         
         [TestMethod]
@@ -85,6 +85,20 @@ namespace NoNulls.Tests.Tests
             user.Number = 0;
 
             var name = Option.CompileChain<User, int>(u => u.Number)(user);
+
+            Assert.IsTrue(name.ValidChain());
+        }
+
+        [TestMethod]
+        public void TestWithDateTimeValueTypeTargetAndToString()
+        {
+            var user = new User();
+
+            user.Number = 0;
+
+            // This is currently throwing exception - "Reference equality is not defined for the types 'System.DateTime' and 'System.Object'" 
+            // in line 128 of NullVisitor.cs class.
+            var name = Option.CompileChain<User, string>(u => u.DateOfBirth.ToShortDateString())(user);
 
             Assert.IsTrue(name.ValidChain());
         }
