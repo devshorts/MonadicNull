@@ -25,6 +25,10 @@ namespace NoNulls.Tests.SampleData
         public HashSet<User> ClassMatesHash { get; set; }
 
         public DateTime DateOfBirth { get; set; }
+
+        public DateTime? GraduationDate { get; set; }
+
+        public int? ScholarshipReceived { get; set; }
     }
 
     public sealed class School
