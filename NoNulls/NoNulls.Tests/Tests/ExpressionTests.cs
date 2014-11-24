@@ -116,10 +116,9 @@ namespace NoNulls.Tests.Tests
         {
             var user = new User { Number = 0 };
 
-            // TODO: throws a "System.InvalidOperationException: Nullable object must have a value."
             var name = Option.CompileChain<User, string>(u => u.GraduationDate.Value.ToShortDateString())(user);
 
-            Assert.IsTrue(name.ValidChain());
+            Assert.IsFalse(name.ValidChain());
         }
 
         [TestMethod]
@@ -127,10 +126,9 @@ namespace NoNulls.Tests.Tests
         {
             var user = new User { Number = 0 };
 
-            // TODO: throws a "System.InvalidOperationException: Nullable object must have a value."
             var name = Option.CompileChain<User, string>(u => u.ScholarshipReceived.Value.ToString())(user);
 
-            Assert.IsTrue(name.ValidChain());
+            Assert.IsFalse(name.ValidChain());
         }
 
 
