@@ -127,16 +127,16 @@ namespace Devshorts.MonadicNull
         {
             if (variable.Type.IsValueType)
             {
-                if (variable.Type.FullName.StartsWith("System.Nullable"))
+                if (variable.Type.IsGenericType && variable.Type.GetGenericTypeDefinition() == typeof(Nullable<>))
                 {
                     var hasValueExpression = Expression.Property(variable, "HasValue");
+                    
                     var hasValueIsFalseExpression = Expression.IsFalse(hasValueExpression);
+
                     return Expression.Condition(hasValueIsFalseExpression, whenNull, nextExpression);
                 }
-                else
-                {
-                    return nextExpression;
-                }
+                
+                return nextExpression;
             }
 
             var ifNull = Expression.ReferenceEqual(variable, Expression.Constant(null));
