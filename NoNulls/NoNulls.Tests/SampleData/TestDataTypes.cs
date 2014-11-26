@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace NoNulls.Tests.SampleData
 {    
-    internal sealed class User
+    public sealed class User
     {
         public School School { get; set; }
 
@@ -23,9 +23,15 @@ namespace NoNulls.Tests.SampleData
         public Dictionary<User, User> ClassMatesDict { get; set; }
 
         public HashSet<User> ClassMatesHash { get; set; }
+
+        public DateTime DateOfBirth { get; set; }
+
+        public DateTime? GraduationDate { get; set; }
+
+        public int? ScholarshipReceived { get; set; }
     }
 
-    internal sealed class School
+    public sealed class School
     {
         public District District { get; set; }
 
@@ -43,7 +49,7 @@ namespace NoNulls.Tests.SampleData
         }
     }
 
-    internal sealed class District
+    public sealed class District
     {
         public Street Street { get; set; }
 
@@ -53,7 +59,7 @@ namespace NoNulls.Tests.SampleData
         }
     }
 
-    internal class Street
+    public class Street
     {
         public String Name { get; set; }
 
@@ -62,6 +68,13 @@ namespace NoNulls.Tests.SampleData
         public String GetName(int i)
         {
             return Name + i;
+        }
+
+        public String GetNameSideEffect(int i)
+        {
+            Name += i;
+
+            return Name;
         }
 
         public String GetName(Func<int> action)

@@ -45,7 +45,7 @@ namespace NoNulls.Tests.Tests
     }
 
     [TestClass]
-    internal  class ExpressionTests
+    public  class ExpressionTests
     {
         
         [TestMethod]
@@ -88,6 +88,49 @@ namespace NoNulls.Tests.Tests
 
             Assert.IsTrue(name.ValidChain());
         }
+
+        [TestMethod]
+        public void TestValueTypeInChain()
+        {
+            User user = null;
+
+            var name = Option.Safe(() => user.Number.GetHashCode());
+
+            Assert.IsFalse(name.ValidChain());
+
+            Assert.AreEqual(name.GetValueOrDefault(), 0);
+        }
+
+        [TestMethod]
+        public void TestWithDateTimeValueTypeTargetAndToString()
+        {
+            var user = new User { Number = 0 };
+
+            var name = Option.CompileChain<User, string>(u => u.DateOfBirth.ToShortDateString())(user);
+
+            Assert.IsTrue(name.ValidChain());
+        }
+
+        [TestMethod]
+        public void TestWithNullableDateTimeValueTypeTargetAndToString()
+        {
+            var user = new User { Number = 0 };
+
+            var name = Option.CompileChain<User, string>(u => u.GraduationDate.Value.ToShortDateString())(user);
+
+            Assert.IsFalse(name.ValidChain());
+        }
+
+        [TestMethod]
+        public void TestWithNullableIntValueTypeTargetAndToString()
+        {
+            var user = new User { Number = 0 };
+
+            var name = Option.CompileChain<User, string>(u => u.ScholarshipReceived.Value.ToString())(user);
+
+            Assert.IsFalse(name.ValidChain());
+        }
+
 
         [TestMethod]
         public void TestBasicNullWithValueTypeTarget()
@@ -232,8 +275,9 @@ namespace NoNulls.Tests.Tests
             Assert.AreEqual(name.Value, "foo");
         }
 
+
         [TestMethod]
-        public void TestNonNullsWithMethodCalls()
+        public void TestNonNullsWithMethodCallsAndArgs()
         {
             var user = new User
             {
@@ -253,6 +297,29 @@ namespace NoNulls.Tests.Tests
 
             Assert.AreEqual(name.Value, "foo1");
         }
+
+        [TestMethod]
+        public void TestNonNullsWithMethodCallsWithSideEffects()
+        {
+            var user = new User
+            {
+                School = new School
+                {
+                    District = new District
+                    {
+                        Street = new Street
+                        {
+                            Name = "foo"
+                        }
+                    }
+                }
+            };
+
+            var name = Option.CompileChain<User, string>(u => u.GetSchool().GetDistrict().GetStreet().GetNameSideEffect(1))(user);
+
+            Assert.AreEqual(name.Value, "foo1");
+        }
+
 
         [TestMethod]
         public void TestNonNullsWithMethodCalls2()

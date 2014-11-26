@@ -23,6 +23,16 @@ namespace Devshorts.MonadicNull
             }
         }
 
+        public T GetValueOrDefault(T @default = default(T))
+        {
+            if (!ValidChain())
+            {
+                return @default;
+            }
+
+            return Value;
+        }
+
         public String Failure { get; private set; }
 
         public MethodValue(T value, String failure, bool validChain)

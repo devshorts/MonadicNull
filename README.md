@@ -10,14 +10,18 @@ if (user != null)
     {
         if (user.School.District != null)
         {
-            if (user.School.District.Street != null)
-            {
-                return user.School.District.Street;
-            }
+            return user.School.District.Street;
         }
+
+		log.debug("user.school.disctrict is null");
+		return null;
     }
+
+	log.debug("user.school is null");
+	return null;
 }
 
+log.debug("user is null");
 return null;
 ```
 
@@ -50,7 +54,7 @@ And you will be guaranteed to get a non-null result from the chain, which is a w
 Installation
 ====
 
-Install version 0.2.0 via [Nuget](https://www.nuget.org/packages/Devshorts.MonadicNull/0.2.0)
+Install version 0.2.1 via [Nuget](https://www.nuget.org/packages/Devshorts.MonadicNull/0.2.1)
 
 ```
 > Install-Package Devshorts.MonadicNull
@@ -230,31 +234,53 @@ Internals
 Internally, the lambda is decomposed and transformed to an expression where the if checks are automatically built out. For the previous failure example, the underlying lambda after transformation actually looks like this:
 
 ```csharp
-.Lambda #Lambda1<System.Func`2[NoNulls.Tests.SampleData.User,Devshorts.MonadicNull.MethodValue`1[NoNulls.Tests.SampleData.Street]]>(NoNulls.Tests.SampleData.User $u)
+.Lambda #Lambda1<System.Func`2[NoNulls.Tests.SampleData.User,Devshorts.MonadicNull.MethodValue`1[System.String]]>(NoNulls.Tests.SampleData.User $u)
 {
     .Block() {
-        .If ($u == null) {
-            .New Devshorts.MonadicNull.MethodValue`1[NoNulls.Tests.SampleData.Street](
-                null,
-                "u",
-                False)
-        } .Else {
-            .If ($u.School == null) {
-                .New Devshorts.MonadicNull.MethodValue`1[NoNulls.Tests.SampleData.Street](
+        .Block(NoNulls.Tests.SampleData.User $var1) {
+            $var1 = $u;
+            .If ($var1 == null) {
+                .New Devshorts.MonadicNull.MethodValue`1[System.String](
                     null,
-                    "u.School",
+                    "u",
                     False)
             } .Else {
-                .If (($u.School).District == null) {
-                    .New Devshorts.MonadicNull.MethodValue`1[NoNulls.Tests.SampleData.Street](
-                        null,
-                        "u.School.District",
-                        False)
-                } .Else {
-                    .New Devshorts.MonadicNull.MethodValue`1[NoNulls.Tests.SampleData.Street](
-                        (($u.School).District).Street,
-                        "u.School.District",
-                        True)
+                .Block(NoNulls.Tests.SampleData.School $var2) {
+                    $var2 = .Call $var1.GetSchool();
+                    .If ($var2 == null) {
+                        .New Devshorts.MonadicNull.MethodValue`1[System.String](
+                            null,
+                            "u.GetSchool()",
+                            False)
+                    } .Else {
+                        .Block(NoNulls.Tests.SampleData.District $var3) {
+                            $var3 = $var2.District;
+                            .If ($var3 == null) {
+                                .New Devshorts.MonadicNull.MethodValue`1[System.String](
+                                    null,
+                                    "u.GetSchool().District",
+                                    False)
+                            } .Else {
+                                .Block(NoNulls.Tests.SampleData.Street $var4) {
+                                    $var4 = $var3.Street;
+                                    .If ($var4 == null) {
+                                        .New Devshorts.MonadicNull.MethodValue`1[System.String](
+                                            null,
+                                            "u.GetSchool().District.Street",
+                                            False)
+                                    } .Else {
+                                        .Block(System.String $var5) {
+                                            $var5 = $var4.Name;
+                                            .New Devshorts.MonadicNull.MethodValue`1[System.String](
+                                                $var5,
+                                                "u.GetSchool().District.Street.Name",
+                                                True)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
