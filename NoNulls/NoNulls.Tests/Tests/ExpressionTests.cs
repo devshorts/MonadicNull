@@ -112,6 +112,27 @@ namespace NoNulls.Tests.Tests
         }
 
         [TestMethod]
+        public void TestWithNullableDateTimeValueTypeTargetAndToString()
+        {
+            var user = new User { Number = 0 };
+
+            var name = Option.CompileChain<User, string>(u => u.GraduationDate.Value.ToShortDateString())(user);
+
+            Assert.IsFalse(name.ValidChain());
+        }
+
+        [TestMethod]
+        public void TestWithNullableIntValueTypeTargetAndToString()
+        {
+            var user = new User { Number = 0 };
+
+            var name = Option.CompileChain<User, string>(u => u.ScholarshipReceived.Value.ToString())(user);
+
+            Assert.IsFalse(name.ValidChain());
+        }
+
+
+        [TestMethod]
         public void TestBasicNullWithValueTypeTarget()
         {
             var user = new User();
