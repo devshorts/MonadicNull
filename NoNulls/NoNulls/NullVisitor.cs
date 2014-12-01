@@ -39,8 +39,20 @@ namespace Devshorts.MonadicNull
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
-        {            
-            _expressions.Push(node);
+        {
+            if (node.Method.IsStatic)
+            {
+                if (node.Arguments.Count == 1)
+                {
+                    _expressions.Push(node);
+
+                    _expressions.Push(node.Arguments[0]);
+                }
+            }
+            else
+            {
+                _expressions.Push(node);
+            }
 
             return Visit(node.Object);
         }
@@ -164,7 +176,14 @@ namespace Devshorts.MonadicNull
             {
                 var method = current as MethodCallExpression;
 
-                evaluatedExpression = Expression.Call(prev, method.Method, method.Arguments);
+                if (method.Method.IsStatic)
+                {
+                    evaluatedExpression = Expression.Call(null, method.Method, method.Arguments);
+                }
+                else
+                {
+                    evaluatedExpression = Expression.Call(prev, method.Method, method.Arguments);
+                }
             }
             else if (current is MemberExpression)
             {

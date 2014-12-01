@@ -78,6 +78,47 @@ namespace NoNulls.Tests.Tests
         }
 
         [TestMethod]
+        public void TestWithMultipleMethodCallsInChain()
+        {
+            var user = new User { Number = 0 };
+
+            var name = Option.CompileChain<User, string>(u => u.GraduationDate.Value.ToShortDateString().ToString())(user);
+
+            Assert.IsFalse(name.ValidChain());
+        }
+
+        [TestMethod]
+        public void TestWithExtensionMethod()
+        {
+            var user = new User { Number = 0 };
+
+            var name = Option.CompileChain<User, int>(u => u.ClassMatesList.Count())(user);
+
+            Assert.IsFalse(name.ValidChain());
+        }
+
+        [TestMethod]
+        public void TestWithExtensionMethodAndToString()
+        {
+            var user = new User { Number = 0 };
+
+            var name = Option.CompileChain<User, string>(u => u.ClassMatesList.Count().ToString())(user);
+
+            Assert.IsFalse(name.ValidChain());
+        }
+
+        [TestMethod]
+        [Ignore]
+        public void TestWithExtensionMethodWithLambdaAndToString()
+        {
+            var user = new User { Number = 0 };
+
+            var name = Option.CompileChain<User, string>(u => u.ClassMatesList.Count(c => c.GraduationDate.HasValue).ToString())(user);
+
+            Assert.IsFalse(name.ValidChain());
+        }
+
+        [TestMethod]
         public void TestWithValueTypeTarget()
         {
             var user = new User();
