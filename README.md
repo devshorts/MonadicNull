@@ -54,7 +54,7 @@ And you will be guaranteed to get a non-null result from the chain, which is a w
 Installation
 ====
 
-Install version 0.2.1 via [Nuget](https://www.nuget.org/packages/Devshorts.MonadicNull/0.2.1)
+Install via [Nuget](https://www.nuget.org/packages/Devshorts.MonadicNull)
 
 ```
 > Install-Package Devshorts.MonadicNull
