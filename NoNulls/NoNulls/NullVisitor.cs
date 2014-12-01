@@ -42,11 +42,14 @@ namespace Devshorts.MonadicNull
         {
             if (node.Method.IsStatic)
             {
-                if (node.Arguments.Count == 1)
-                {
-                    _expressions.Push(node);
+                _expressions.Push(node);
 
-                    _expressions.Push(node.Arguments[0]);
+                foreach (var arg in node.Arguments.Take(1))
+                {
+                    if (!(arg is LambdaExpression))
+                    {
+                        _expressions.Push(arg);
+                    }
                 }
             }
             else

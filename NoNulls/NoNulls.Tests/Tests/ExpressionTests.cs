@@ -108,7 +108,6 @@ namespace NoNulls.Tests.Tests
         }
 
         [TestMethod]
-        [Ignore]
         public void TestWithExtensionMethodWithLambdaAndToString()
         {
             var user = new User { Number = 0 };
@@ -116,6 +115,31 @@ namespace NoNulls.Tests.Tests
             var name = Option.CompileChain<User, string>(u => u.ClassMatesList.Count(c => c.GraduationDate.HasValue).ToString())(user);
 
             Assert.IsFalse(name.ValidChain());
+        }
+
+        [TestMethod]
+        public void TestWithExtensionMethodWithLambdaAndToStringValid()
+        {
+            var user = new User
+                       {
+                           ClassMatesList = new[]
+                                            {
+                                                new User
+                                                {
+                                                    GraduationDate = DateTime.Now
+                                                },
+                                                new User
+                                                {
+                                                    GraduationDate = DateTime.Now
+                                                }
+                                            }.ToList()
+                       };
+
+            var name = Option.CompileChain<User, string>(u => u.ClassMatesList.Count(c => c.GraduationDate.HasValue).ToString())(user);
+
+            Assert.IsTrue(name.ValidChain());
+
+            Assert.AreEqual(name.Value, "2");
         }
 
         [TestMethod]
