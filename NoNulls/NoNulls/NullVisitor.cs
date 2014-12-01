@@ -54,7 +54,8 @@ namespace Devshorts.MonadicNull
 
         private Expression BuildFinalStatement()
         {
-            return Expression.Block(new[] { BuildIfs(_expressions.Pop()) });
+            var finalExpression = Expression.Block(new[] { BuildIfs(_expressions.Pop()) });
+            return finalExpression;
         }
 
         private int _count;
@@ -164,7 +165,19 @@ namespace Devshorts.MonadicNull
             {
                 var method = current as MethodCallExpression;
 
-                evaluatedExpression = Expression.Call(prev, method.Method, method.Arguments);
+                if (method.Method.IsStatic)
+                {
+                    foreach (var argument in method.Arguments)
+                    {
+                        // TODO: Build a null check expression somehow?
+                    }
+
+                    evaluatedExpression = Expression.Call(method.Method, method.Arguments);
+                }
+                else
+                {
+                    evaluatedExpression = Expression.Call(prev, method.Method, method.Arguments);
+                }
             }
             else if (current is MemberExpression)
             {
